@@ -1,0 +1,33 @@
+{
+  "name": "mila",
+  "version": "1.0.0",
+  "description": "Yoga Studio WhatsApp AI Assistant with SvelteKit CMS and Claude AI",
+  "type": "module",
+  "scripts": {
+    "dev": "vite dev",
+    "build": "vite build",
+    "preview": "node build/index.js",
+    "start": "node scripts/start.js",
+    "init-db": "node scripts/init-db.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.32.1",
+    "@qdrant/js-client-rest": "^1.11.0",
+    "@sveltejs/adapter-node": "^5.2.9",
+    "better-sqlite3": "^11.7.0",
+    "dotenv": "^17.2.3",
+    "openai": "^4.73.1",
+    "qrcode": "^1.5.4",
+    "uuid": "^11.0.3",
+    "whatsapp-web.js": "^1.25.0"
+  },
+  "devDependencies": {
+    "@sveltejs/kit": "^2.9.0",
+    "@sveltejs/vite-plugin-svelte": "^5.0.2",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.49",
+    "svelte": "^5.2.7",
+    "tailwindcss": "^3.4.17",
+    "vite": "^6.0.7"
+  }
+}
