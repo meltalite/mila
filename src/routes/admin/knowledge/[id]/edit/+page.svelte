@@ -2,6 +2,7 @@
 	import Card from '$lib/components/ui/Card.svelte';
 	import MarkdownEditor from '$lib/components/ui/MarkdownEditor.svelte';
 	import TagInput from '$lib/components/ui/TagInput.svelte';
+	import KeyValueInput from '$lib/components/ui/KeyValueInput.svelte';
 	import { enhance } from '$app/forms';
 
 	/** @type {import('./$types').PageData} */
@@ -13,6 +14,9 @@
 	let loading = false;
 	let content = form?.data?.content || data.entry.content;
 	let keywords = form?.data?.keywords || data.entry.keywords;
+	let metadata = form?.data?.metadata
+		? (typeof form.data.metadata === 'string' ? JSON.parse(form.data.metadata) : form.data.metadata)
+		: (data.entry.metadata ? JSON.parse(data.entry.metadata) : {});
 </script>
 
 <svelte:head>
@@ -80,6 +84,14 @@
 
 				<!-- Keywords -->
 				<TagInput bind:value={keywords} />
+				<input type="hidden" name="keywords" value={keywords} />
+
+				<!-- Metadata -->
+				<div>
+					<label class="block text-sm font-medium text-text-dark mb-2">Metadata</label>
+					<KeyValueInput bind:value={metadata} placeholder="Add custom metadata for filtering or categorization" />
+					<input type="hidden" name="metadata" value={JSON.stringify(metadata)} />
+				</div>
 
 				<!-- Status -->
 				<div>

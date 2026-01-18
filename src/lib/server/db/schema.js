@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS knowledge_entries (
   category TEXT NOT NULL,  -- Enum: classes, pricing, policies, instructors, facilities, getting_started, programs, general
   content TEXT NOT NULL,
   keywords TEXT,  -- Comma-separated keywords
+  metadata TEXT,  -- JSON object with key-value pairs
   vector_id TEXT,  -- Reference to Qdrant point ID
   status TEXT DEFAULT 'active',  -- active, draft, archived
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -79,7 +80,7 @@ export const KNOWLEDGE_CATEGORIES = [
 	// 'facilities',
 	// 'getting_started',
 	// 'programs',
-	// 'general'
+	'general'
 ];
 
 /**

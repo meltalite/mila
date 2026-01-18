@@ -98,8 +98,7 @@ export function initWhatsAppClient() {
 
 	// Message event
 	client.on('message', (message) => {
-    console.log('[WhatsApp] incoming message:', message);
-    if (!message.body.startsWith('!test')) return;
+    console.log('[WhatsApp] incoming message');
 		handleMessage(message).catch((error) => {
 			console.error('[WhatsApp] Error handling message:', error);
 		});

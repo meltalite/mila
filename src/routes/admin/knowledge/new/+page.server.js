@@ -25,7 +25,8 @@ export const actions = {
 			category: formData.get('category'),
 			content: formData.get('content'),
 			keywords: formData.get('keywords'),
-			status: formData.get('status') || 'active'
+			status: formData.get('status') || 'active',
+      metadata: formData.get('metadata')
 		};
 
 		// Validate

@@ -68,6 +68,7 @@ export async function initCollection() {
  * @param {string} entry.content - Entry content
  * @param {string} entry.category - Entry category
  * @param {string} entry.keywords - Comma-separated keywords
+ * @param {Object} [entry.metadata] - Custom metadata key-value pairs
  * @param {number[]} embedding - 1536-dimensional embedding vector
  * @returns {Promise<void>}
  */
@@ -75,20 +76,27 @@ export async function upsertEntry(entry, embedding) {
 	const qdrant = getQdrantClient();
 
 	try {
+		const payload = {
+			tenant_id: entry.tenant_id,
+			title: entry.title,
+			content: entry.content,
+			category: entry.category,
+			keywords: entry.keywords?.split(',').map((k) => k.trim()) || [],
+			entry_id: entry.id
+		};
+
+		// Add metadata if provided
+		if (entry.metadata && typeof entry.metadata === 'object') {
+			payload.metadata = entry.metadata;
+		}
+
 		await qdrant.upsert(COLLECTION_NAME, {
 			wait: true,
 			points: [
 				{
 					id: entry.id,
 					vector: embedding,
-					payload: {
-						tenant_id: entry.tenant_id,
-						title: entry.title,
-						content: entry.content,
-						category: entry.category,
-						keywords: entry.keywords?.split(',').map((k) => k.trim()) || [],
-						entry_id: entry.id
-					}
+					payload
 				}
 			]
 		});

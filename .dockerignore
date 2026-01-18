@@ -1,0 +1,55 @@
+# Dependencies
+node_modules/
+
+# Build outputs (will rebuild in container)
+.svelte-kit/
+build/
+dist/
+
+# Environment files (passed via docker-compose)
+.env
+.env.local
+.env.*.local
+
+# Data & Storage (mounted as volumes)
+data/
+qdrant_storage/
+.wwebjs_auth/
+.wwebjs_cache/
+whatsapp-session/
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Temporary files
+.tmp/
+temp/
+
+# Git
+.git/
+.gitignore
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Claude
+.claude/
+
+# Documentation (not needed in runtime)
+docs/
+README.md

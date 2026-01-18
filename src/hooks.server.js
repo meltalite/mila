@@ -12,6 +12,13 @@ let initialized = false;
 async function initializeServices() {
 	if (initialized) return;
 
+	// Skip initialization in production (handled by scripts/start.js)
+	if (process.env.NODE_ENV === 'production') {
+		console.log('[Server] Skipping initialization in production mode (handled by startup script)');
+		initialized = true;
+		return;
+	}
+
 	console.log('[Server] Initializing services...');
 
 	try {

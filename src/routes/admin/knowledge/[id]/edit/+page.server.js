@@ -31,8 +31,10 @@ export const actions = {
 			category: formData.get('category'),
 			content: formData.get('content'),
 			keywords: formData.get('keywords'),
-			status: formData.get('status')
+			status: formData.get('status'),
+      metadata: formData.get('metadata')
 		};
+    console.log('Metadata received:', data.metadata);
 
 		// Validate
 		if (!data.title || !data.category || !data.content) {

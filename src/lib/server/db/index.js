@@ -16,6 +16,7 @@ export function getDatabase() {
 	if (!db) {
 		const dbPath = process.env.DATABASE_URL?.replace('sqlite:', '') || './data/yoga-assistant.db';
 
+		console.log(`[Database] Connecting to ${dbPath}`);
 		db = new Database(dbPath, {
 			verbose: process.env.NODE_ENV === 'development' ? console.log : null
 		});
@@ -40,6 +41,7 @@ export function initDatabase() {
 	const database = getDatabase();
 
 	// Execute schema creation
+	console.log('[Database] Create Schema');
 	database.exec(createTablesSQL);
 
 	console.log('[Database] Schema initialized');

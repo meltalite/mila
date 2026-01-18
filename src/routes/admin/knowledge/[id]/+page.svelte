@@ -95,8 +95,29 @@
 				{/if}
 			</Card>
 
-			<!-- Metadata -->
+			<!-- Custom Metadata -->
 			<Card title="Metadata">
+				{#if data.entry.metadata}
+					{@const metadataObj = JSON.parse(data.entry.metadata)}
+					{#if Object.keys(metadataObj).length > 0}
+						<dl class="space-y-3 text-sm">
+							{#each Object.entries(metadataObj) as [key, value]}
+								<div>
+									<dt class="text-gray-500">{key}</dt>
+									<dd class="text-gray-700 text-xs font-mono">{value}</dd>
+								</div>
+							{/each}
+						</dl>
+					{:else}
+						<p class="text-gray-500 text-sm">No custom metadata</p>
+					{/if}
+				{:else}
+					<p class="text-gray-500 text-sm">No custom metadata</p>
+				{/if}
+			</Card>
+
+			<!-- System Details -->
+			<Card title="System Details">
 				<dl class="space-y-3 text-sm">
 					<div>
 						<dt class="text-gray-500">ID</dt>

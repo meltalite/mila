@@ -4,14 +4,24 @@
  */
 
 import OpenAI from 'openai';
-import { OPENAI_API_KEY } from '$env/static/private';
-
-const openai = new OpenAI({
-	apiKey: OPENAI_API_KEY
-});
 
 const EMBEDDING_MODEL = 'text-embedding-3-small';
 const EMBEDDING_DIMENSIONS = 1536;
+
+let openaiClient;
+
+/**
+ * Get or create OpenAI client (lazy initialization)
+ * @returns {OpenAI} - OpenAI client instance
+ */
+function getOpenAI() {
+	if (!openaiClient) {
+		openaiClient = new OpenAI({
+			apiKey: process.env.OPENAI_API_KEY
+		});
+	}
+	return openaiClient;
+}
 
 /**
  * Generate embedding for a single text
@@ -20,6 +30,7 @@ const EMBEDDING_DIMENSIONS = 1536;
  */
 export async function embed(text) {
 	try {
+		const openai = getOpenAI();
 		const response = await openai.embeddings.create({
 			model: EMBEDDING_MODEL,
 			input: text,
@@ -41,6 +52,7 @@ export async function embed(text) {
  */
 export async function embedBatch(texts) {
 	try {
+		const openai = getOpenAI();
 		const response = await openai.embeddings.create({
 			model: EMBEDDING_MODEL,
 			input: texts,

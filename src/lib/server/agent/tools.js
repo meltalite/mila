@@ -15,14 +15,14 @@ import { KNOWLEDGE_CATEGORIES } from '../db/schema.js';
 export const knowledgeSearchTool = {
 	name: 'knowledge_search',
 	description:
-		"Search the yoga studio's knowledge base for information about classes, pricing, policies, facilities, and more. Use this tool whenever the user asks a question that might be answered by the studio's information.",
+		"REQUIRED TOOL: Search the yoga studio's knowledge base for accurate, up-to-date information. You MUST use this tool for ANY question about: classes, schedules, pricing, membership, policies, facilities, location, instructors, or any studio-related information. DO NOT answer from general knowledge - always search first.",
 	input_schema: {
 		type: 'object',
 		properties: {
 			query: {
 				type: 'string',
 				description:
-					'The search query. Use natural language that captures what the user is asking about.'
+					'The search query. Use natural language that captures what the user is asking about. Include both English and Indonesian keywords if relevant (e.g., "kelas classes beginner pemula").'
 			},
 			category: {
 				type: 'string',

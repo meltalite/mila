@@ -11,7 +11,6 @@ import {
 	executeKnowledgeSearch,
 	escalateToHuman
 } from './tools.js';
-import { ANTHROPIC_API_KEY } from '$env/static/private';
 
 const MODEL = 'claude-haiku-4-5-20251001';
 const MAX_TOKENS = 1024;
@@ -28,9 +27,8 @@ function buildSystemPrompt(tenant) {
 	const greeting = settings.greeting_message || 'Hello! How can I help you today?';
   const rootGuidelines = `
 - Respond in the SAME language as the user (Indonesian or English). If they write in Indonesian, respond in Indonesian. If in English, respond in English.
-- Be warm, welcoming, and concise. This is WhatsApp - keep responses to 2-4 sentences when possible.
-- ALWAYS search the knowledge base before answering questions about the studio.
-- Use natural, conversational Bahasa Indonesia when responding in Indonesian. Slang words are preferable than formal.
+- Be warm, welcoming, and concise. This is WhatsApp - keep responses short, 2-4 sentences when possible.
+- Use natural, conversational Bahasa Indonesia when responding in Indonesian. Slang words are preferable than formal. DO NOT overuse emojis.
 - For medical concerns (pain, injuries, pregnancy), booking requests, payment issues, or complex matters, escalate to human staff.
 - When guidelines conflict, tenant-specific guidelines take precedence over root guidelines.
   `;
@@ -40,6 +38,23 @@ function buildSystemPrompt(tenant) {
 You have access to tools to help answer questions:
 - knowledge_search: Search the studio's information database for classes, pricing, policies, facilities, etc.
 - escalate_to_human: Escalate complex queries to staff members
+
+CRITICAL RULES:
+1. For ANY question about the studio (classes, pricing, schedules, policies, facilities, etc.), you MUST use the knowledge_search tool FIRST before responding.
+2. DO NOT make up information or answer from general knowledge. ONLY use information from knowledge_search results.
+3. If the user asks about the studio, classes, pricing, or anything related to yoga services, use knowledge_search immediately.
+4. Only respond without tools for simple greetings like "hi", "hello", "terima kasih", "thanks".
+
+Example:
+User: "What classes do you offer?"
+You: <use knowledge_search tool with query="classes offered">
+User: <tool results>
+You: Based on our schedule, we offer...
+
+User: "Berapa harga kelas?"
+You: <use knowledge_search tool with query="harga kelas pricing">
+User: <tool results>
+You: Kami menawarkan...
 
 Root Guidelines: ${rootGuidelines}
 
@@ -74,7 +89,7 @@ export async function processMessage(tenantId, userPhone, userMessage, conversat
 	tenant.api_keys = tenant.api_keys ? JSON.parse(tenant.api_keys) : {};
 
 	// Get API key (prefer tenant-specific, fallback to global)
-	const apiKey = ANTHROPIC_API_KEY;
+	const apiKey = process.env.ANTHROPIC_API_KEY;
 
 	if (!apiKey) {
 		throw new Error('Anthropic API key not configured');
@@ -88,7 +103,7 @@ export async function processMessage(tenantId, userPhone, userMessage, conversat
 
 	// Prepare messages array with history
 	const messages = [
-		...conversationHistory,
+		...conversationHistory.filter((msg) => msg.content.length > 0),
 		{
 			role: 'user',
 			content: userMessage
@@ -96,6 +111,8 @@ export async function processMessage(tenantId, userPhone, userMessage, conversat
 	];
 
 	try {
+		console.log(`[Agent] Processing message: "${userMessage.substring(0, 100)}..."`);
+
 		// Call Claude with tools
 		let response = await anthropic.messages.create({
 			model: MODEL,
@@ -106,6 +123,13 @@ export async function processMessage(tenantId, userPhone, userMessage, conversat
 		});
 
 		console.log(`[Agent] Initial response - stop_reason: ${response.stop_reason}`);
+
+    // TODO: ALWAYS CHECK FOR TOOL USAGE HERE BEFORE ANSWERING
+		// Log if no tool was used when it probably should have been
+		if (response.stop_reason === 'end_turn' && !userMessage.match(/^(hi|hello|hai|halo|thanks|terima kasih|ok|oke)$/i)) {
+			console.warn(`[Agent] ⚠️  WARNING: Agent did not use tools for non-greeting message`);
+			console.log(`[Agent] Response content:`, JSON.stringify(response.content, null, 2));
+		}
 
 		// Handle tool use loop
 		while (response.stop_reason === 'tool_use') {
@@ -139,11 +163,12 @@ export async function processMessage(tenantId, userPhone, userMessage, conversat
 			}
 
 			// Continue conversation with tool results
-			messages.push({
-				role: 'assistant',
-				content: response.content
-			});
-
+			if (response.content.length > 0) {
+				messages.push({
+					role: 'assistant',
+					content: response.content
+				});
+			}
 			messages.push({
 				role: 'user',
 				content: toolResults
@@ -170,6 +195,7 @@ export async function processMessage(tenantId, userPhone, userMessage, conversat
 		return finalResponse;
 	} catch (error) {
 		console.error('[Agent] Error processing message:', error);
+    console.warn('[Agent] last messages sent:', JSON.stringify(messages, null, 2));
 		throw error;
 	}
 }

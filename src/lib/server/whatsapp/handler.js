@@ -75,13 +75,6 @@ export async function handleMessage(message) {
 
 		console.log(`[WhatsApp Handler] Message from ${userPhone}: ${messageText}`);
 
-		// Check rate limit
-		if (!checkRateLimit(userPhone)) {
-			console.log(`[WhatsApp Handler] Rate limit exceeded for ${userPhone}`);
-			await message.reply('Please wait a moment before sending another message.');
-			return;
-		}
-
 		// Find tenant by WhatsApp number
 		const tenant = findTenantByWhatsApp(message.to);
 
@@ -90,8 +83,22 @@ export async function handleMessage(message) {
 			// Could send a default message or just ignore
 			return;
 		}
-
 		console.log(`[WhatsApp Handler] Tenant: ${tenant.name} (ID: ${tenant.id})`);
+
+    tenant.settings = tenant.settings ? JSON.parse(tenant.settings) : {};
+    console.log('[WhatsApp Handler] Tenant settings:', tenant.settings);
+    const keyword = tenant.settings?.testing_keyword_prefix;
+    if (!keyword || !messageText.startsWith(keyword)) {
+      console.log(`[WhatsApp Handler] Message does not start with testing keyword prefix "${keyword}". Ignoring.`);
+      return;
+    }
+    ``
+		// Check rate limit
+		if (!checkRateLimit(userPhone)) {
+			console.log(`[WhatsApp Handler] Rate limit exceeded for ${userPhone}`);
+			await message.reply('Please wait a moment before sending another message.');
+			return;
+		}
 
 		// Load conversation history (last 5 messages)
 		const history = getConversationHistory(tenant.id, userPhone, 5);

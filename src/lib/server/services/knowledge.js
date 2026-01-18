@@ -75,11 +75,17 @@ export async function createEntry(data) {
 	const now = new Date().toISOString();
 
 	try {
+		// Parse metadata if it's a string, or stringify if it's an object
+		const metadataStr =
+			typeof data.metadata === 'string'
+				? data.metadata
+				: JSON.stringify(data.metadata || {});
+
 		// 1. Insert to SQLite
 		db.prepare(
 			`INSERT INTO knowledge_entries
-			(id, tenant_id, title, category, content, keywords, status, created_at, updated_at)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+			(id, tenant_id, title, category, content, keywords, metadata, status, created_at, updated_at)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 		).run(
 			id,
 			data.tenant_id,
@@ -87,6 +93,7 @@ export async function createEntry(data) {
 			data.category,
 			data.content,
 			data.keywords || '',
+			metadataStr,
 			data.status || 'active',
 			now,
 			now
@@ -103,7 +110,8 @@ export async function createEntry(data) {
 			title: data.title,
 			content: data.content,
 			category: data.category,
-			keywords: data.keywords || ''
+			keywords: data.keywords || '',
+			metadata: JSON.parse(metadataStr)
 		};
 		await upsertEntry(entry, embedding);
 
@@ -158,6 +166,12 @@ export async function updateEntry(id, data) {
 			updates.push('keywords = ?');
 			params.push(data.keywords);
 		}
+		if (data.metadata !== undefined) {
+			updates.push('metadata = ?');
+			const metadataStr =
+				typeof data.metadata === 'string' ? data.metadata : JSON.stringify(data.metadata || {});
+			params.push(metadataStr);
+		}
 		if (data.status !== undefined) {
 			updates.push('status = ?');
 			params.push(data.status);
@@ -169,12 +183,25 @@ export async function updateEntry(id, data) {
 
 		db.prepare(`UPDATE knowledge_entries SET ${updates.join(', ')} WHERE id = ?`).run(...params);
 
-		// 2. If content changed, regenerate embedding and update Qdrant
-		if (data.content !== undefined && data.content !== existing.content) {
-			console.log(`[Knowledge] Content changed, regenerating embedding for: ${existing.title}`);
+		// 2. If content or metadata changed, update Qdrant
+		const needsVectorUpdate =
+			(data.content !== undefined && data.content !== existing.content) ||
+			data.metadata !== undefined;
+
+		if (needsVectorUpdate) {
+			console.log(`[Knowledge] Updating vector for: ${existing.title}`);
 
 			const updatedEntry = getEntry(id);
-			const embedding = await embed(updatedEntry.content);
+
+			// Only regenerate embedding if content changed
+			let embedding;
+			if (data.content !== undefined && data.content !== existing.content) {
+				embedding = await embed(updatedEntry.content);
+			} else {
+				// Content didn't change, but metadata did - we still need to update Qdrant payload
+				// Skip regenerating embedding, will use existing one
+				embedding = null;
+			}
 
 			const entry = {
 				id: updatedEntry.id,
@@ -182,10 +209,21 @@ export async function updateEntry(id, data) {
 				title: updatedEntry.title,
 				content: updatedEntry.content,
 				category: updatedEntry.category,
-				keywords: updatedEntry.keywords
+				keywords: updatedEntry.keywords,
+				metadata: updatedEntry.metadata ? JSON.parse(updatedEntry.metadata) : {}
 			};
 
-			await upsertEntry(entry, embedding);
+			// If we have new embedding, upsert with it
+			// Otherwise, we need to update just the payload
+			if (embedding) {
+				await upsertEntry(entry, embedding);
+			} else {
+				// Update payload only (Qdrant doesn't have a separate update payload API)
+				// So we need to get the existing vector and re-upsert with updated payload
+				// For simplicity, we'll regenerate the embedding
+				const newEmbedding = await embed(updatedEntry.content);
+				await upsertEntry(entry, newEmbedding);
+			}
 		}
 
 		console.log(`[Knowledge] Updated entry: ${id}`);

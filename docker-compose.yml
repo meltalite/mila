@@ -1,4 +1,29 @@
 services:
+  app:
+    build:
+      context: .
+      args:
+        USER_ID: ${USER_ID:-1000}
+        GROUP_ID: ${GROUP_ID:-1000}
+    ports:
+      - "3000:3000"
+    environment:
+      - ADMIN_USER=${ADMIN_USER:-admin}
+      - ADMIN_PASS=${ADMIN_PASS:-changeme}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - QDRANT_URL=http://qdrant:6333
+      - DATABASE_URL=sqlite:./data/yoga-assistant.db
+      - NODE_ENV=production
+      - WHATSAPP_SESSION_PATH=./.wwebjs_auth
+    volumes:
+      - ./data:/app/data
+      - ./.wwebjs_auth:/app/.wwebjs_auth
+      - ./.wwebjs_cache:/app/.wwebjs_cache
+    depends_on:
+      - qdrant
+    restart: unless-stopped
+
   qdrant:
     image: qdrant/qdrant:v1.7.4
     ports:
