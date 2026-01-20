@@ -17,7 +17,7 @@ const openai = new OpenAI({ apiKey: OPENAI_API_KEY });
 const qdrant = new QdrantClient({ url: QDRANT_URL });
 const dbPath = process.env.DATABASE_URL?.replace('sqlite:', '') || './data/yoga-assistant.db';
 
-db = new Database(dbPath, {
+const db = new Database(dbPath, {
   verbose: process.env.NODE_ENV === 'development' ? console.log : null
 });
 
@@ -321,7 +321,7 @@ async function insertScheduleChunks() {
         chunk.title,
         chunk.category,
         chunk.content,
-        chunk.keywords || '',
+        JSON.stringify(chunk.keywords || []),
         JSON.stringify(chunk.metadata),
         'active',
         now,

@@ -68,7 +68,7 @@ export async function executeKnowledgeSearch(tenantId, query, category = null) {
 		const queryEmbedding = await embed(query);
 
 		// Search Qdrant with tenant filter
-		const results = await search(queryEmbedding, tenantId, category, 3);
+		const results = await search(queryEmbedding, tenantId, category, 7);
 
 		if (results.length === 0) {
 			return {

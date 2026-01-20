@@ -11,6 +11,9 @@ import {
 	executeKnowledgeSearch,
 	escalateToHuman
 } from './tools.js';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const MODEL = 'claude-haiku-4-5-20251001';
 const MAX_TOKENS = 1024;
@@ -23,7 +26,8 @@ const MAX_TOKENS = 1024;
 function buildSystemPrompt(tenant) {
 	const tenantName = tenant.name;
   const settings = tenant.settings || {};
-	const currentTime = new Date().toLocaleString('en-US', { timeZone: 'Asia/Jakarta' });
+	const currentTime = new Date().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' });
+	const today = new Date().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' });
 	const greeting = settings.greeting_message || 'Hello! How can I help you today?';
   const rootGuidelines = `
 - Respond in the SAME language as the user (Indonesian or English). If they write in Indonesian, respond in Indonesian. If in English, respond in English.
@@ -41,27 +45,15 @@ You have access to tools to help answer questions:
 
 CRITICAL RULES:
 1. For ANY question about the studio (classes, pricing, schedules, policies, facilities, etc.), you MUST use the knowledge_search tool FIRST before responding.
-2. DO NOT make up information or answer from general knowledge. ONLY use information from knowledge_search results.
-3. If the user asks about the studio, classes, pricing, or anything related to yoga services, use knowledge_search immediately.
-4. Only respond without tools for simple greetings like "hi", "hello", "terima kasih", "thanks".
-
-Example:
-User: "What classes do you offer?"
-You: <use knowledge_search tool with query="classes offered">
-User: <tool results>
-You: Based on our schedule, we offer...
-
-User: "Berapa harga kelas?"
-You: <use knowledge_search tool with query="harga kelas pricing">
-User: <tool results>
-You: Kami menawarkan...
+2. DO NOT make up information or answer from general knowledge. Use information from knowledge_search results as the basis for your response.
+3. Only respond without tools for simple greetings like "hi", "hello", "terima kasih", "thanks".
 
 Root Guidelines: ${rootGuidelines}
 
 Additional Tenant Guidelines:
 - ${settings.basic_guidelines || 'None'}
 
-Current time: ${currentTime}
+Today date time: ${today} ${currentTime}, use this today's date and time as a baseline for schedule questions.
 
 Greeting message: ${greeting}`;
 }
@@ -119,17 +111,11 @@ export async function processMessage(tenantId, userPhone, userMessage, conversat
 			max_tokens: MAX_TOKENS,
 			system: systemPrompt,
 			messages: messages,
+      tool_choice: { type: 'auto' },
 			tools: [knowledgeSearchTool, escalateToHumanTool]
 		});
 
 		console.log(`[Agent] Initial response - stop_reason: ${response.stop_reason}`);
-
-    // TODO: ALWAYS CHECK FOR TOOL USAGE HERE BEFORE ANSWERING
-		// Log if no tool was used when it probably should have been
-		if (response.stop_reason === 'end_turn' && !userMessage.match(/^(hi|hello|hai|halo|thanks|terima kasih|ok|oke)$/i)) {
-			console.warn(`[Agent] ⚠️  WARNING: Agent did not use tools for non-greeting message`);
-			console.log(`[Agent] Response content:`, JSON.stringify(response.content, null, 2));
-		}
 
 		// Handle tool use loop
 		while (response.stop_reason === 'tool_use') {
