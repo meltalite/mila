@@ -83,12 +83,26 @@
 			<h1 class="text-3xl font-bold text-text-dark">Knowledge Base</h1>
 			<p class="text-gray-600 mt-1">Manage knowledge entries for AI agent</p>
 		</div>
-		<a
-			href="/admin/knowledge/new"
-			class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-purple-700"
-		>
-			+ Add New Entry
-		</a>
+		<div class="flex gap-3">
+			<a
+				href="/admin/knowledge/test"
+				class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+			>
+				Test Search
+			</a>
+			<a
+				href="/admin/knowledge/chunk"
+				class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+			>
+				Auto Chunker
+			</a>
+			<a
+				href="/admin/knowledge/new"
+				class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-purple-700"
+			>
+				+ Add New Entry
+			</a>
+		</div>
 	</div>
 
 	<!-- Filters -->

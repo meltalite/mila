@@ -13,10 +13,12 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.32.1",
+    "@langchain/textsplitters": "^1.0.1",
     "@qdrant/js-client-rest": "^1.11.0",
     "@sveltejs/adapter-node": "^5.2.9",
     "better-sqlite3": "^11.7.0",
     "dotenv": "^17.2.3",
+    "langchain": "^1.2.10",
     "openai": "^4.73.1",
     "qrcode": "^1.5.4",
     "uuid": "^11.0.3",
